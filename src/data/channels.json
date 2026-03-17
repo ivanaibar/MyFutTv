@@ -1,0 +1,63 @@
+[
+  {
+    "competitionId": 2014,
+    "competitionName": "LaLiga",
+    "channel": "Movistar+ LaLiga",
+    "notes": "Partidos seleccionados en LaLiga TV Bar"
+  },
+  {
+    "competitionId": 2001,
+    "competitionName": "Champions League",
+    "channel": "Movistar+ Liga de Campeones"
+  },
+  {
+    "competitionId": 2021,
+    "competitionName": "Premier League",
+    "channel": "DAZN"
+  },
+  {
+    "competitionId": 2002,
+    "competitionName": "Bundesliga",
+    "channel": "OneFootball / LaLiga TV Bar"
+  },
+  {
+    "competitionId": 2015,
+    "competitionName": "Ligue 1",
+    "channel": "DAZN"
+  },
+  {
+    "competitionId": 2019,
+    "competitionName": "Serie A",
+    "channel": "DAZN"
+  },
+  {
+    "competitionId": 2003,
+    "competitionName": "Eredivisie",
+    "channel": "No disponible en España"
+  },
+  {
+    "competitionId": 2017,
+    "competitionName": "Primeira Liga",
+    "channel": "No disponible en España"
+  },
+  {
+    "competitionId": 2016,
+    "competitionName": "Championship",
+    "channel": "DAZN"
+  },
+  {
+    "competitionId": 2000,
+    "competitionName": "FIFA World Cup",
+    "channel": "TVE / Movistar+"
+  },
+  {
+    "competitionId": 2018,
+    "competitionName": "European Championship",
+    "channel": "TVE / Movistar+"
+  },
+  {
+    "competitionId": 2013,
+    "competitionName": "Série A (Brazil)",
+    "channel": "No disponible en España"
+  }
+]
