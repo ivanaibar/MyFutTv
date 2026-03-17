@@ -105,14 +105,37 @@ export async function getMatchesByDateRange(
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
-  const [response, tvMap] = await Promise.all([
-    apiFetch<FootballDataMatchesResponse>(
-      `/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`
+  // API limit: max 10 days per request. Split into chunks if needed.
+  const from = new Date(dateFrom);
+  const to = new Date(dateTo);
+  const chunks: { from: string; to: string }[] = [];
+  let chunkStart = from;
+
+  while (chunkStart <= to) {
+    const chunkEnd = new Date(chunkStart);
+    chunkEnd.setDate(chunkEnd.getDate() + 9); // max 10 days
+    const effectiveEnd = chunkEnd > to ? to : chunkEnd;
+    chunks.push({
+      from: chunkStart.toISOString().split("T")[0],
+      to: effectiveEnd.toISOString().split("T")[0],
+    });
+    chunkStart = new Date(effectiveEnd);
+    chunkStart.setDate(chunkStart.getDate() + 1);
+  }
+
+  const [responses, tvMap] = await Promise.all([
+    Promise.all(
+      chunks.map((c) =>
+        apiFetch<FootballDataMatchesResponse>(
+          `/matches?dateFrom=${c.from}&dateTo=${c.to}`
+        )
+      )
     ),
     scrapeTvChannels(dateFrom),
   ]);
 
-  const matches = response.matches
+  const allRawMatches = responses.flatMap((r) => r.matches);
+  const matches = allRawMatches
     .filter((m) => FREE_COMPETITION_IDS.includes(m.competition.id))
     .map((m) => mapMatch(m, tvMap));
 
