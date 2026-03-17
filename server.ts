@@ -4,7 +4,7 @@ import { Server as SocketIOServer } from "socket.io";
 import { initLiveUpdater } from "./src/services/liveUpdater";
 
 const dev = process.env.NODE_ENV !== "production";
-const hostname = "localhost";
+const hostname = "0.0.0.0";
 const port = parseInt(process.env.PORT || "3000", 10);
 
 const app = next({ dev, hostname, port });
@@ -15,7 +15,7 @@ app.prepare().then(() => {
 
   const io = new SocketIOServer(httpServer, {
     cors: {
-      origin: dev ? "http://localhost:3000" : undefined,
+      origin: true,
     },
   });
 

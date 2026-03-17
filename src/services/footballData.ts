@@ -16,11 +16,15 @@ const LIVE_MATCHES_TTL = 50 * 1000;
 const COMPETITIONS_TTL = 24 * 60 * 60 * 1000;
 
 async function apiFetch<T>(endpoint: string): Promise<T> {
+  const key = process.env.FOOTBALL_DATA_API_KEY;
   const res = await fetch(`${API_BASE}${endpoint}`, {
-    headers: { "X-Auth-Token": API_KEY },
+    headers: { "X-Auth-Token": key || "" },
   });
   if (!res.ok) {
-    throw new Error(`football-data.org API error: ${res.status} ${res.statusText}`);
+    const body = await res.text();
+    throw new Error(
+      `football-data.org API error: ${res.status} ${res.statusText} - ${body}`
+    );
   }
   return res.json() as Promise<T>;
 }
@@ -103,12 +107,19 @@ export async function getLiveMatches(): Promise<Match[]> {
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
+  // Fetch today's matches and filter for live ones
+  // (the ?status=LIVE filter is not available on the free tier)
+  const today = new Date().toISOString().split("T")[0];
   const response = await apiFetch<FootballDataMatchesResponse>(
-    `/matches?status=LIVE`
+    `/matches?date=${today}`
   );
 
   const matches = response.matches
-    .filter((m) => FREE_COMPETITION_IDS.includes(m.competition.id))
+    .filter(
+      (m) =>
+        FREE_COMPETITION_IDS.includes(m.competition.id) &&
+        (m.status === "IN_PLAY" || m.status === "PAUSED")
+    )
     .map(mapMatch);
 
   cache.set(cacheKey, matches, LIVE_MATCHES_TTL);

@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: myfuttv
+    runtime: docker
+    plan: free
+    envVars:
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false
+      - key: NODE_ENV
+        value: production
