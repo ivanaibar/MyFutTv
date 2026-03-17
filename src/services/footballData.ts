@@ -1,5 +1,6 @@
 import { cache } from "./cache";
 import { getChannelForCompetition } from "./channels";
+import { scrapeTvChannels, findChannel } from "./tvScraper";
 import { FREE_COMPETITION_IDS } from "@/lib/constants";
 import type {
   Match,
@@ -29,7 +30,19 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-function mapMatch(raw: FootballDataMatch): Match {
+function mapMatch(
+  raw: FootballDataMatch,
+  tvMap?: Map<string, string>
+): Match {
+  // Try scraped channel first, fall back to static mapping
+  let channel: string | undefined;
+  if (tvMap) {
+    channel = findChannel(tvMap, raw.homeTeam.name, raw.awayTeam.name);
+  }
+  if (!channel) {
+    channel = getChannelForCompetition(raw.competition.id);
+  }
+
   return {
     id: raw.id,
     homeTeam: {
@@ -59,7 +72,7 @@ function mapMatch(raw: FootballDataMatch): Match {
       halfTime: raw.score.halfTime,
     },
     minute: raw.minute,
-    channel: getChannelForCompetition(raw.competition.id),
+    channel,
   };
 }
 
@@ -68,13 +81,15 @@ export async function getMatchesByDate(date: string): Promise<Match[]> {
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiFetch<FootballDataMatchesResponse>(
-    `/matches?date=${date}`
-  );
+  // Fetch matches and TV channels in parallel
+  const [response, tvMap] = await Promise.all([
+    apiFetch<FootballDataMatchesResponse>(`/matches?date=${date}`),
+    scrapeTvChannels(date),
+  ]);
 
   const matches = response.matches
     .filter((m) => FREE_COMPETITION_IDS.includes(m.competition.id))
-    .map(mapMatch);
+    .map((m) => mapMatch(m, tvMap));
 
   const hasLive = matches.some((m) => m.status === "IN_PLAY" || m.status === "PAUSED");
   cache.set(cacheKey, matches, hasLive ? LIVE_MATCHES_TTL : FUTURE_MATCHES_TTL);
@@ -90,13 +105,16 @@ export async function getMatchesByDateRange(
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiFetch<FootballDataMatchesResponse>(
-    `/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`
-  );
+  const [response, tvMap] = await Promise.all([
+    apiFetch<FootballDataMatchesResponse>(
+      `/matches?dateFrom=${dateFrom}&dateTo=${dateTo}`
+    ),
+    scrapeTvChannels(dateFrom),
+  ]);
 
   const matches = response.matches
     .filter((m) => FREE_COMPETITION_IDS.includes(m.competition.id))
-    .map(mapMatch);
+    .map((m) => mapMatch(m, tvMap));
 
   cache.set(cacheKey, matches, FUTURE_MATCHES_TTL);
   return matches;
@@ -114,13 +132,15 @@ export async function getLiveMatches(): Promise<Match[]> {
     `/matches?date=${today}`
   );
 
+  const tvMap = await scrapeTvChannels(today);
+
   const matches = response.matches
     .filter(
       (m) =>
         FREE_COMPETITION_IDS.includes(m.competition.id) &&
         (m.status === "IN_PLAY" || m.status === "PAUSED")
     )
-    .map(mapMatch);
+    .map((m) => mapMatch(m, tvMap));
 
   cache.set(cacheKey, matches, LIVE_MATCHES_TTL);
   return matches;
