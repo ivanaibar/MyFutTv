@@ -25,8 +25,8 @@ export function DateNavigator({ currentDate, onDateChange }: DateNavigatorProps)
         </svg>
       </button>
 
-      <div className="text-center min-w-[250px]">
-        <h2 className="text-lg font-semibold capitalize">{dateLabel}</h2>
+      <div className="text-center min-w-0 sm:min-w-[250px]">
+        <h2 className="text-base sm:text-lg font-semibold capitalize">{dateLabel}</h2>
         {isToday(currentDate) && (
           <p className="text-sm text-gray-500">
             {format(currentDate, "EEEE d 'de' MMMM yyyy", { locale: es })}

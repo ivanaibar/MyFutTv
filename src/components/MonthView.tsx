@@ -75,11 +75,11 @@ export function MonthView({ currentDate, selectedLeagues, onDayClick }: MonthVie
             <button
               key={date.toISOString()}
               onClick={() => onDayClick(date)}
-              className={`p-2 rounded-lg text-center transition-colors min-h-[60px] ${
+              className={`p-1 sm:p-2 rounded-lg text-center transition-colors min-h-[44px] sm:min-h-[60px] ${
                 !inMonth ? "text-gray-300" : "hover:bg-gray-50"
               } ${isCurrentDay ? "bg-green-50 border border-green-400" : ""}`}
             >
-              <div className="text-sm">{format(date, "d")}</div>
+              <div className="text-xs sm:text-sm">{format(date, "d")}</div>
               {dayMatches.length > 0 && inMonth && (
                 <div className="mt-1">
                   <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-xs font-medium">

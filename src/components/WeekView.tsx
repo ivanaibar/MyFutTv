@@ -41,12 +41,17 @@ export function WeekView({ currentDate, selectedLeagues, onDayClick }: WeekViewP
   }
 
   return (
-    <div className="grid grid-cols-7 gap-2">
+    <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-2">
       {days.map(({ date, matches: dayMatches }) => {
         const isCurrentDay = isSameDay(date, new Date());
         const liveCount = dayMatches.filter(
           (m) => m.status === "IN_PLAY" || m.status === "PAUSED"
         ).length;
+
+        // Get unique channels for the day
+        const channels = [
+          ...new Set(dayMatches.map((m) => m.channel).filter(Boolean)),
+        ];
 
         return (
           <button
@@ -56,10 +61,12 @@ export function WeekView({ currentDate, selectedLeagues, onDayClick }: WeekViewP
               isCurrentDay ? "border-green-500 bg-green-50" : "border-gray-200 bg-white"
             }`}
           >
-            <div className="text-xs text-gray-500 capitalize">
-              {format(date, "EEE", { locale: es })}
+            <div className="flex items-baseline gap-1.5 sm:block">
+              <div className="text-xs text-gray-500 capitalize">
+                {format(date, "EEE", { locale: es })}
+              </div>
+              <div className="text-lg font-semibold">{format(date, "d")}</div>
             </div>
-            <div className="text-lg font-semibold">{format(date, "d")}</div>
             {dayMatches.length > 0 && (
               <div className="mt-1 text-xs text-gray-600">
                 {dayMatches.length} {dayMatches.length === 1 ? "partido" : "partidos"}
@@ -68,6 +75,23 @@ export function WeekView({ currentDate, selectedLeagues, onDayClick }: WeekViewP
             {liveCount > 0 && (
               <div className="mt-0.5 text-xs text-red-500 font-medium">
                 {liveCount} en directo
+              </div>
+            )}
+            {channels.length > 0 && (
+              <div className="mt-1.5 flex flex-wrap gap-1">
+                {channels.slice(0, 2).map((ch) => (
+                  <span
+                    key={ch}
+                    className="inline-block text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-medium truncate max-w-full"
+                  >
+                    {ch}
+                  </span>
+                ))}
+                {channels.length > 2 && (
+                  <span className="text-[10px] text-gray-400">
+                    +{channels.length - 2}
+                  </span>
+                )}
               </div>
             )}
           </button>
