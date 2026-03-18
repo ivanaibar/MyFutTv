@@ -49,17 +49,21 @@ export default function Home() {
 
           {view === "day" && isToday(currentDate) && (
             <div className="flex items-center justify-end gap-3 mt-2">
-              {lastUpdated && (
+              {error ? (
+                <span className="text-xs text-error/70">Error al actualizar</span>
+              ) : lastUpdated ? (
                 <span className="text-xs text-base-content/40">
                   Actualizado a las {format(lastUpdated, "HH:mm")}
                 </span>
-              )}
+              ) : null}
               <button
+                type="button"
                 className="btn btn-xs btn-ghost gap-1"
                 onClick={refetch}
                 disabled={loading}
               >
                 <svg
+                  aria-hidden="true"
                   className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`}
                   fill="none"
                   stroke="currentColor"
