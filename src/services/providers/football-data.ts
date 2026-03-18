@@ -2,14 +2,12 @@ import { cache } from "../cache";
 import { getChannelForCompetition } from "../channels";
 import { scrapeTvChannels, findChannel } from "../tvScraper";
 import { FREE_COMPETITION_IDS } from "@/lib/constants";
+import { enrichWithApiFootballGoals } from "./api-football";
 import type {
   Match,
-  Goal,
   Competition,
   FootballDataMatchesResponse,
   FootballDataMatch,
-  FootballDataMatchDetail,
-  FootballDataGoal,
 } from "@/types";
 import type { FootballProvider } from "./types";
 
@@ -75,53 +73,6 @@ function mapMatch(raw: FootballDataMatch, tvMap?: Map<string, string>): Match {
   };
 }
 
-function mapGoals(goals: FootballDataGoal[], homeTeamId: number): Goal[] {
-  return goals.map((g) => ({
-    scorer: g.scorer.name,
-    minute: g.minute,
-    team: g.team.id === homeTeamId ? "home" : "away",
-    type: g.type,
-  }));
-}
-
-const ENRICHABLE_STATUSES = new Set(["FINISHED", "IN_PLAY", "PAUSED"]);
-
-async function enrichWithGoals(
-  matches: Match[],
-  rawMatches: FootballDataMatch[]
-): Promise<Match[]> {
-  const enrichableRaw = rawMatches.filter((m) =>
-    ENRICHABLE_STATUSES.has(m.status)
-  );
-
-  if (enrichableRaw.length === 0) return matches;
-
-  const results = await Promise.allSettled(
-    enrichableRaw.map((m) =>
-      apiFetch<FootballDataMatchDetail>(`/matches/${m.id}`)
-    )
-  );
-
-  // Build a map from match id -> goals
-  const goalsById = new Map<number, Goal[]>();
-  results.forEach((result, index) => {
-    if (result.status === "fulfilled") {
-      const detail = result.value;
-      if (detail.goals) {
-        const homeTeamId = enrichableRaw[index].homeTeam.id;
-        goalsById.set(detail.id, mapGoals(detail.goals, homeTeamId));
-      }
-    }
-  });
-
-  return matches.map((match) => {
-    const goals = goalsById.get(match.id);
-    if (goals !== undefined) {
-      return { ...match, goals };
-    }
-    return match;
-  });
-}
 
 async function getMatchesByDate(date: string): Promise<Match[]> {
   const cacheKey = `matches:${date}`;
@@ -138,7 +89,7 @@ async function getMatchesByDate(date: string): Promise<Match[]> {
   );
 
   let matches = rawFiltered.map((m) => mapMatch(m, tvMap));
-  matches = await enrichWithGoals(matches, rawFiltered);
+  matches = await enrichWithApiFootballGoals(matches, date);
 
   const hasLive = matches.some(
     (m) => m.status === "IN_PLAY" || m.status === "PAUSED"
@@ -214,7 +165,7 @@ async function getLiveMatches(): Promise<Match[]> {
   );
 
   let matches = rawFiltered.map((m) => mapMatch(m, tvMap));
-  matches = await enrichWithGoals(matches, rawFiltered);
+  matches = await enrichWithApiFootballGoals(matches, today);
 
   cache.set(cacheKey, matches, LIVE_MATCHES_TTL);
   return matches;
