@@ -59,8 +59,8 @@ function GoalList({ goals, side }: { goals: Goal[]; side: "home" | "away" }) {
   if (sideGoals.length === 0) return null;
   return (
     <ul className="space-y-0.5">
-      {sideGoals.map((g, i) => (
-        <li key={i} className={`text-xs text-gray-400 leading-tight${side === "away" ? " text-right" : ""}`}>
+      {sideGoals.map((g) => (
+        <li key={`${g.minute}-${g.scorer}-${g.type}`} className={`text-xs text-gray-400 leading-tight${side === "away" ? " text-right" : ""}`}>
           ⚽ {g.minute}' {g.scorer}
           {g.type === "PENALTY" && (
             <span className="text-gray-300"> (pp)</span>
