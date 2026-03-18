@@ -80,9 +80,9 @@ export function WeekView({ currentDate, selectedLeagues, onDayClick }: WeekViewP
               </div>
             )}
             {channels.length > 0 && (
-              <div className="mt-1.5 flex flex-col gap-1">
+              <div className="mt-1.5 flex flex-col gap-1 items-start w-full overflow-hidden">
                 {(channels as string[]).slice(0, 2).map((ch) => (
-                  <span key={ch} className="badge badge-primary badge-sm font-semibold truncate max-w-full">
+                  <span key={ch} className="badge badge-primary badge-sm font-semibold max-w-full truncate block">
                     {ch}
                   </span>
                 ))}
