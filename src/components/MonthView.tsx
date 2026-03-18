@@ -13,7 +13,6 @@ import {
   isToday,
   parseISO,
 } from "date-fns";
-import { es } from "date-fns/locale";
 import { useMatchesRange } from "@/hooks/useMatchesRange";
 
 interface MonthViewProps {
