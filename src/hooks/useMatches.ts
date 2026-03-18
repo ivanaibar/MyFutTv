@@ -1,8 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { getSocket } from "@/lib/socket";
-import type { Match, MatchUpdatePayload } from "@/types";
+import type { Match } from "@/types";
 
 export function useMatches(date: string, selectedLeagues: number[]) {
   const [matches, setMatches] = useState<Match[]>([]);
@@ -27,35 +26,6 @@ export function useMatches(date: string, selectedLeagues: number[]) {
   useEffect(() => {
     fetchMatches();
   }, [fetchMatches]);
-
-  useEffect(() => {
-    const socket = getSocket();
-
-    if (selectedLeagues.length > 0) {
-      socket.emit("subscribe:leagues", { leagueIds: selectedLeagues });
-    }
-
-    const handleUpdate = (payload: MatchUpdatePayload) => {
-      setMatches((prev) =>
-        prev.map((match) =>
-          match.id === payload.matchId
-            ? {
-                ...match,
-                score: { ...match.score, fullTime: payload.score.fullTime },
-                status: payload.status,
-                minute: payload.minute,
-              }
-            : match
-        )
-      );
-    };
-
-    socket.on("match:update", handleUpdate);
-
-    return () => {
-      socket.off("match:update", handleUpdate);
-    };
-  }, [selectedLeagues]);
 
   const filteredMatches =
     selectedLeagues.length > 0
