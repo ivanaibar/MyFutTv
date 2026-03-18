@@ -125,5 +125,5 @@ export interface FootballDataGoal {
 }
 
 export interface FootballDataMatchDetail extends FootballDataMatch {
-  goals: FootballDataGoal[];
+  goals: FootballDataGoal[] | null;
 }

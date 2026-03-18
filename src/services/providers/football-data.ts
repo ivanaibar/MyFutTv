@@ -107,8 +107,10 @@ async function enrichWithGoals(
   results.forEach((result, index) => {
     if (result.status === "fulfilled") {
       const detail = result.value;
-      const homeTeamId = enrichableRaw[index].homeTeam.id;
-      goalsById.set(detail.id, mapGoals(detail.goals, homeTeamId));
+      if (detail.goals) {
+        const homeTeamId = enrichableRaw[index].homeTeam.id;
+        goalsById.set(detail.id, mapGoals(detail.goals, homeTeamId));
+      }
     }
   });
 
