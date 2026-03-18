@@ -140,7 +140,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
       {/* Goal scorers */}
       {match.goals && match.goals.length > 0 && (
-        <div className="flex justify-between px-4 pb-2 gap-2">
+        <div className="flex justify-between px-4 pb-4 gap-2">
           <div className="flex-1 min-w-0">
             <GoalList goals={match.goals} side="home" />
           </div>
