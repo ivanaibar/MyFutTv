@@ -8,22 +8,21 @@ interface ViewSwitcherProps {
 }
 
 const views: { id: CalendarView; label: string }[] = [
-  { id: "day", label: "Dia" },
+  { id: "day", label: "Día" },
   { id: "week", label: "Semana" },
   { id: "month", label: "Mes" },
 ];
 
 export function ViewSwitcher({ currentView, onViewChange }: ViewSwitcherProps) {
   return (
-    <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+    <div role="tablist" className="tabs tabs-box tabs-sm bg-base-300">
       {views.map(({ id, label }) => (
         <button
           key={id}
+          role="tab"
           onClick={() => onViewChange(id)}
-          className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-            currentView === id
-              ? "bg-green-600 text-white"
-              : "text-gray-600 hover:text-gray-900"
+          className={`tab font-medium transition-colors ${
+            currentView === id ? "tab-active !bg-primary !text-primary-content" : "text-base-content/60"
           }`}
         >
           {label}
