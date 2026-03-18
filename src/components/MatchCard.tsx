@@ -1,6 +1,7 @@
 "use client";
 
 import type { Match } from "@/types";
+import type { Goal } from "@/types";
 import { LiveIndicator } from "./LiveIndicator";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
@@ -51,6 +52,27 @@ function getStatusDisplay(match: Match) {
     default:
       return { label: null, showScore: false };
   }
+}
+
+function GoalList({ goals, side }: { goals: Goal[]; side: "home" | "away" }) {
+  const sideGoals = goals.filter((g) => g.team === side);
+  if (sideGoals.length === 0) return null;
+  return (
+    <ul className="space-y-0.5">
+      {sideGoals.map((g, i) => (
+        <li key={i} className={`text-xs text-gray-400 leading-tight${side === "away" ? " text-right" : ""}`}>
+          ⚽ {g.minute}&apos;{" "}
+          {g.scorer}
+          {g.type === "PENALTY" && (
+            <span className="text-gray-300"> (pp)</span>
+          )}
+          {g.type === "OWN_GOAL" && (
+            <span className="text-gray-300"> (en)</span>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 export function MatchCard({ match }: MatchCardProps) {
@@ -115,6 +137,17 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
       </div>
+
+      {match.goals && match.goals.length > 0 && (
+        <div className="flex justify-between px-4 pb-2 gap-2">
+          <div className="flex-1 min-w-0">
+            <GoalList goals={match.goals} side="home" />
+          </div>
+          <div className="flex-1 min-w-0 text-right">
+            <GoalList goals={match.goals} side="away" />
+          </div>
+        </div>
+      )}
 
       {match.channel ? (
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-4 py-2 flex items-center gap-2">
