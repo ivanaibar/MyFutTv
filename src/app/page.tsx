@@ -26,10 +26,15 @@ export default function Home() {
 
   return (
     <main className="min-h-screen">
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      <header className="bg-base-200 border-b border-base-300 sticky top-0 z-10 backdrop-blur-sm">
         <div className="max-w-3xl mx-auto px-3 sm:px-4 py-3 sm:py-4">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">MyFutTV</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-lg sm:text-xl font-black text-base-content tracking-tight">
+                MyFutTV
+              </h1>
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+            </div>
             <ViewSwitcher currentView={view} onViewChange={setView} />
           </div>
 
