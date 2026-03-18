@@ -96,7 +96,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
       {/* Teams + score row */}
       <div className="flex justify-between px-4 py-2 items-center">
-        <div className="flex items-center gap-2 flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
           {match.homeTeam.crest && (
             <img
               src={match.homeTeam.crest}
@@ -104,12 +104,12 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span className="font-bold text-base text-base-content break-words">
+          <span className="font-bold text-base-content whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.homeTeam.shortName || match.homeTeam.name}
           </span>
         </div>
 
-        <div className="flex flex-col items-center mx-3 sm:mx-4 min-w-[60px] sm:min-w-[72px]">
+        <div className="flex flex-col items-center mx-3 sm:mx-4 min-w-[60px] sm:min-w-[72px] shrink-0">
           {showScore ? (
             <span className="text-3xl font-black text-secondary tabular-nums">
               {match.score.fullTime.home ?? 0} - {match.score.fullTime.away ?? 0}
@@ -124,8 +124,8 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-          <span className="font-bold text-base text-base-content text-right break-words">
+        <div className="flex items-center gap-2 flex-1 justify-end min-w-0 overflow-hidden">
+          <span className="font-bold text-base-content text-right whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.awayTeam.shortName || match.awayTeam.name}
           </span>
           {match.awayTeam.crest && (
