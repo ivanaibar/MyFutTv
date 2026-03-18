@@ -95,7 +95,7 @@ export function MatchCard({ match }: MatchCardProps) {
       </div>
 
       {/* Teams + score row */}
-      <div className={`flex justify-between px-4 py-2 ${showScore ? "items-start" : "items-center"}`}>
+      <div className="flex justify-between px-4 py-2 items-center">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.homeTeam.crest && (
             <img
@@ -104,7 +104,7 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span className={`font-bold text-base text-base-content ${showScore ? "break-words" : "truncate"}`}>
+          <span className="font-bold text-base text-base-content break-words">
             {match.homeTeam.shortName || match.homeTeam.name}
           </span>
         </div>
@@ -125,7 +125,7 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-          <span className={`font-bold text-base text-base-content text-right ${showScore ? "break-words" : "truncate"}`}>
+          <span className="font-bold text-base text-base-content text-right break-words">
             {match.awayTeam.shortName || match.awayTeam.name}
           </span>
           {match.awayTeam.crest && (
