@@ -25,6 +25,13 @@ export interface Competition {
   emblem: string;
 }
 
+export interface Goal {
+  scorer: string;
+  minute: number;
+  team: "home" | "away";
+  type: "REGULAR" | "OWN_GOAL" | "PENALTY";
+}
+
 export interface Match {
   id: number;
   homeTeam: Team;
@@ -38,6 +45,7 @@ export interface Match {
   };
   minute: number | null;
   channel?: string;
+  goals?: Goal[];
 }
 
 export interface ChannelMapping {
@@ -53,15 +61,6 @@ export interface UserPreferences {
 }
 
 export type CalendarView = "day" | "week" | "month";
-
-export interface MatchUpdatePayload {
-  matchId: number;
-  score: {
-    fullTime: { home: number | null; away: number | null };
-  };
-  status: MatchStatus;
-  minute: number | null;
-}
 
 export interface FootballDataMatchesResponse {
   filters: Record<string, string>;
@@ -114,4 +113,17 @@ export interface FootballDataMatch {
     halfTime: { home: number | null; away: number | null };
   };
   referees: Array<{ id: number; name: string; type: string; nationality: string }>;
+}
+
+export interface FootballDataGoal {
+  minute: number;
+  injuryTime: number | null;
+  type: "REGULAR" | "OWN_GOAL" | "PENALTY";
+  team: { id: number; name: string };
+  scorer: { id: number; name: string };
+  assist: { id: number; name: string } | null;
+}
+
+export interface FootballDataMatchDetail extends FootballDataMatch {
+  goals: FootballDataGoal[];
 }
