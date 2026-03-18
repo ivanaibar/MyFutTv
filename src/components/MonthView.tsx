@@ -10,6 +10,7 @@ import {
   addDays,
   isSameMonth,
   isSameDay,
+  isToday,
   parseISO,
 } from "date-fns";
 import { es } from "date-fns/locale";
@@ -47,44 +48,53 @@ export function MonthView({ currentDate, selectedLeagues, onDayClick }: MonthVie
     return result;
   }, [calStart, calEnd]);
 
-  const dayHeaders = ["Lun", "Mar", "Mie", "Jue", "Vie", "Sab", "Dom"];
+  const dayHeaders = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 
   return (
     <div>
       {loading && (
         <div className="flex justify-center py-4">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-600" />
+          <span className="loading loading-ring loading-md text-primary" />
         </div>
       )}
 
       <div className="grid grid-cols-7 gap-1">
         {dayHeaders.map((h) => (
-          <div key={h} className="text-center text-xs font-medium text-gray-500 py-2">
+          <div key={h} className="text-center text-xs font-semibold text-base-content/40 py-2">
             {h}
           </div>
         ))}
 
         {weeks.flat().map((date) => {
           const inMonth = isSameMonth(date, currentDate);
-          const isCurrentDay = isSameDay(date, new Date());
+          const isCurrentDay = isToday(date);
           const dayMatches = matches.filter((m) =>
             isSameDay(parseISO(m.utcDate), date)
+          );
+          const hasLive = dayMatches.some(
+            (m) => m.status === "IN_PLAY" || m.status === "PAUSED"
           );
 
           return (
             <button
               key={date.toISOString()}
               onClick={() => onDayClick(date)}
-              className={`p-1 sm:p-2 rounded-lg text-center transition-colors min-h-[44px] sm:min-h-[60px] ${
-                !inMonth ? "text-gray-300" : "hover:bg-gray-50"
-              } ${isCurrentDay ? "bg-green-50 border border-green-400" : ""}`}
+              className={`p-1 sm:p-2 rounded-lg text-center transition-all duration-150 min-h-[44px] sm:min-h-[60px] border ${
+                !inMonth
+                  ? "text-base-content/20 bg-transparent border-transparent"
+                  : isCurrentDay
+                  ? "bg-primary/10 border-primary/40 hover:bg-primary/20"
+                  : "bg-base-200 border-base-300 hover:bg-base-300 hover:border-primary/30"
+              }`}
             >
-              <div className="text-xs sm:text-sm">{format(date, "d")}</div>
+              <div className={`text-sm font-bold ${
+                isCurrentDay ? "text-primary" : inMonth ? "text-base-content" : "text-base-content/20"
+              }`}>
+                {format(date, "d")}
+              </div>
               {dayMatches.length > 0 && inMonth && (
-                <div className="mt-1">
-                  <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-green-100 text-green-700 text-xs font-medium">
-                    {dayMatches.length}
-                  </span>
+                <div className={`text-xs mt-0.5 ${hasLive ? "text-error font-semibold animate-pulse" : "text-base-content/40"}`}>
+                  {dayMatches.length}
                 </div>
               )}
             </button>
