@@ -1,6 +1,7 @@
 import { cache } from "../cache";
 import { getChannelForCompetition } from "../channels";
 import { scrapeTvChannels, findChannel } from "../tvScraper";
+import { scrapeTvChannelsAs } from "../tvScraperAs";
 import { FREE_COMPETITION_IDS } from "@/lib/constants";
 import { enrichWithApiFootballGoals } from "./api-football";
 import type {
@@ -74,15 +75,34 @@ function mapMatch(raw: FootballDataMatch, tvMap?: Map<string, string>): Match {
 }
 
 
+function mergeChannelMaps(
+  primary: Map<string, string>,
+  secondary: Map<string, string>
+): Map<string, string> {
+  const merged = new Map(primary);
+  for (const [key, channel] of secondary) {
+    if (!merged.has(key)) {
+      merged.set(key, channel);
+    } else if (merged.get(key) !== channel) {
+      console.warn(
+        `[channel-merge] Mismatch for "${key}": primary="${merged.get(key)}" secondary="${channel}"`
+      );
+    }
+  }
+  return merged;
+}
+
 async function getMatchesByDate(date: string): Promise<Match[]> {
   const cacheKey = `matches:${date}`;
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
-  const [response, tvMap] = await Promise.all([
+  const [response, primaryTvMap, secondaryTvMap] = await Promise.all([
     apiFetch<FootballDataMatchesResponse>(`/matches?date=${date}`),
     scrapeTvChannels(date),
+    scrapeTvChannelsAs(date),
   ]);
+  const tvMap = mergeChannelMaps(primaryTvMap, secondaryTvMap);
 
   const rawFiltered = response.matches.filter((m) =>
     FREE_COMPETITION_IDS.includes(m.competition.id)
@@ -156,7 +176,11 @@ async function getLiveMatches(): Promise<Match[]> {
     `/matches?date=${today}`
   );
 
-  const tvMap = await scrapeTvChannels(today);
+  const [primaryTvMap, secondaryTvMap] = await Promise.all([
+    scrapeTvChannels(today),
+    scrapeTvChannelsAs(today),
+  ]);
+  const tvMap = mergeChannelMaps(primaryTvMap, secondaryTvMap);
 
   const rawFiltered = response.matches.filter(
     (m) =>
