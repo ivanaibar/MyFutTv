@@ -172,11 +172,8 @@ async function getLiveMatches(): Promise<Match[]> {
   if (cached) return cached;
 
   const today = new Date().toISOString().split("T")[0];
-  const response = await apiFetch<FootballDataMatchesResponse>(
-    `/matches?date=${today}`
-  );
-
-  const [primaryTvMap, secondaryTvMap] = await Promise.all([
+  const [response, primaryTvMap, secondaryTvMap] = await Promise.all([
+    apiFetch<FootballDataMatchesResponse>(`/matches?date=${today}`),
     scrapeTvChannels(today),
     scrapeTvChannelsAs(today),
   ]);
