@@ -41,7 +41,8 @@ export async function getSofaScoreMatches(
 
     if (!res.ok) {
       console.warn(`[sofascore] HTTP ${res.status}`);
-      cache.set(cacheKey, map, SOFA_OTHER_TTL);
+      const isToday = date === new Date().toISOString().split("T")[0];
+      cache.set(cacheKey, map, isToday ? SOFA_LIVE_TTL : SOFA_OTHER_TTL);
       return map;
     }
 
@@ -98,11 +99,11 @@ export async function getSofaScoreMatches(
 // Raw types matching the actual SofaScore API response
 interface SofaRawEvent {
   id: number;
-  homeTeam: { name: string };
-  awayTeam: { name: string };
-  homeScore: { current: number };
-  awayScore: { current: number };
-  status: { code: number; type: string; description: string };
+  homeTeam?: { name?: string };
+  awayTeam?: { name?: string };
+  homeScore?: { current?: number };
+  awayScore?: { current?: number };
+  status?: { code?: number; type?: string; description?: string };
   time?: {
     currentPeriodStartTimestamp?: number;
     initial?: number; // seconds elapsed at period start (0 for 1st half, 2700 for 2nd half)
