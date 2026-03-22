@@ -96,7 +96,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
       {/* Teams + score row */}
       <div className="flex justify-between px-4 py-2 items-center">
-        <div className="flex items-start gap-2 flex-1 min-w-0">
+        <div className="flex items-start gap-2 flex-1 min-w-0 break-words">
           {match.homeTeam.crest && (
             <img
               src={match.homeTeam.crest}
@@ -104,7 +104,7 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span className="font-bold text-base-content break-words min-w-0" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
+          <span className="font-bold text-base-content" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.homeTeam.shortName || match.homeTeam.name}
           </span>
         </div>
@@ -124,8 +124,8 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
 
-        <div className="flex items-start gap-2 flex-1 justify-end min-w-0">
-          <span className="font-bold text-base-content text-right break-words min-w-0" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
+        <div className="flex items-start gap-2 flex-1 justify-end min-w-0 break-words">
+          <span className="font-bold text-base-content text-right" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.awayTeam.shortName || match.awayTeam.name}
           </span>
           {match.awayTeam.crest && (
