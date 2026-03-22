@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { MatchCard } from "./MatchCard";
@@ -13,6 +13,23 @@ interface DayViewProps {
 }
 
 export function DayView({ matches, loading, error }: DayViewProps) {
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+
+  const toggleGroup = (time: string) => {
+    setExpandedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(time)) {
+        next.delete(time);
+      } else {
+        next.add(time);
+      }
+      return next;
+    });
+  };
+
+  const isAllFinished = (groupMatches: Match[]) =>
+    groupMatches.every((m) => m.status === "FINISHED");
+
   const groupedMatches = useMemo(() => {
     const groups = new Map<string, Match[]>();
     const sorted = [...matches].sort(
@@ -71,18 +88,52 @@ export function DayView({ matches, loading, error }: DayViewProps) {
         </div>
       )}
 
-      {Array.from(groupedMatches.entries()).map(([time, timeMatches]) => (
-        <div key={time}>
-          <div className="divider divider-start text-xs text-base-content/40 font-mono mb-3">
-            {time}
+      {Array.from(groupedMatches.entries()).map(([time, timeMatches]) => {
+        const allFinished = isAllFinished(timeMatches);
+        const isExpanded = expandedGroups.has(time);
+
+        return (
+          <div key={time}>
+            {allFinished ? (
+              <button
+                type="button"
+                onClick={() => toggleGroup(time)}
+                className="w-full flex items-center gap-2 text-left mb-3"
+                aria-expanded={isExpanded}
+              >
+                <svg
+                  className={`w-3 h-3 text-base-content/30 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  viewBox="0 0 24 24"
+                >
+                  <path d="M9 18l6-6-6-6" />
+                </svg>
+                <span className="text-xs text-base-content/30 font-mono">{time}</span>
+                <span className="text-xs text-base-content/30">
+                  · {timeMatches.length}{" "}
+                  {timeMatches.length === 1 ? "partido finalizado" : "partidos finalizados"}
+                </span>
+              </button>
+            ) : (
+              <div className="divider divider-start text-xs text-base-content/40 font-mono mb-3">
+                {time}
+              </div>
+            )}
+
+            {(!allFinished || isExpanded) && (
+              <div className="grid gap-3 sm:grid-cols-2">
+                {timeMatches.map((match) => (
+                  <MatchCard key={match.id} match={match} />
+                ))}
+              </div>
+            )}
           </div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            {timeMatches.map((match) => (
-              <MatchCard key={match.id} match={match} />
-            ))}
-          </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }
