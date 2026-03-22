@@ -4,6 +4,7 @@ import type { Match, Goal } from "@/types";
 import { LiveIndicator } from "./LiveIndicator";
 import { format, formatDistanceToNow, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
+import { useFittingFontSize } from "@/hooks/useFittingFontSize";
 
 interface MatchCardProps {
   match: Match;
@@ -74,9 +75,13 @@ function GoalList({ goals, side }: { goals: Goal[]; side: "home" | "away" }) {
 export function MatchCard({ match }: MatchCardProps) {
   const { label: statusLabel, showScore } = getStatusDisplay(match);
   const matchTime = format(parseISO(match.utcDate), "HH:mm");
+  const homeTeamName = match.homeTeam.shortName || match.homeTeam.name;
+  const awayTeamName = match.awayTeam.shortName || match.awayTeam.name;
+  const { ref: homeNameRef } = useFittingFontSize(homeTeamName);
+  const { ref: awayNameRef } = useFittingFontSize(awayTeamName);
 
   return (
-    <div className="card bg-base-200 border border-base-300 hover:border-primary/40 hover:bg-base-300 transition-all duration-200 overflow-hidden rounded-lg">
+    <div className="card bg-base-200 border border-base-300 hover:border-primary/40 hover:bg-base-300 transition-all duration-200 overflow-hidden rounded-lg flex flex-col h-[140px]">
       {/* Competition row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <div className="flex items-center gap-2">
@@ -95,8 +100,8 @@ export function MatchCard({ match }: MatchCardProps) {
       </div>
 
       {/* Teams + score row */}
-      <div className="flex justify-between px-4 py-2 items-center">
-        <div className="flex items-start gap-2 flex-1 min-w-0 break-words">
+      <div className="flex justify-between px-4 py-2 items-center flex-1 min-h-0">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
           {match.homeTeam.crest && (
             <img
               src={match.homeTeam.crest}
@@ -104,8 +109,8 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span className="font-bold text-base-content" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
-            {match.homeTeam.shortName || match.homeTeam.name}
+          <span ref={homeNameRef} className="font-bold text-base-content">
+            {homeTeamName}
           </span>
         </div>
 
@@ -124,9 +129,9 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
 
-        <div className="flex items-start gap-2 flex-1 justify-end min-w-0 break-words">
-          <span className="font-bold text-base-content text-right" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
-            {match.awayTeam.shortName || match.awayTeam.name}
+        <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
+          <span ref={awayNameRef} className="font-bold text-base-content text-right">
+            {awayTeamName}
           </span>
           {match.awayTeam.crest && (
             <img
