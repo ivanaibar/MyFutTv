@@ -99,9 +99,11 @@ export function DayView({ matches, loading, error }: DayViewProps) {
                 type="button"
                 onClick={() => toggleGroup(time)}
                 className="w-full flex items-center gap-2 text-left mb-3"
-                aria-expanded={isExpanded}
+                aria-expanded={isExpanded ? "true" : "false"}
+                aria-controls={`group-${time}`}
               >
                 <svg
+                  aria-hidden="true"
                   className={`w-3 h-3 text-base-content/30 shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
                   fill="none"
                   stroke="currentColor"
@@ -125,7 +127,7 @@ export function DayView({ matches, loading, error }: DayViewProps) {
             )}
 
             {(!allFinished || isExpanded) && (
-              <div className="grid gap-3 sm:grid-cols-2">
+              <div id={`group-${time}`} className="grid gap-3 sm:grid-cols-2">
                 {timeMatches.map((match) => (
                   <MatchCard key={match.id} match={match} />
                 ))}
