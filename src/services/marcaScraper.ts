@@ -8,7 +8,6 @@ export interface MarcaMatch {
 }
 
 const MARCA_TTL = 2 * 60 * 60 * 1000; // 2h
-const MARCA_LIVE_TTL = 50 * 1000; // 50s (reserved for future live enrichment)
 
 /**
  * Scrapes Spanish TV channel info for today's football matches.
@@ -65,9 +64,9 @@ function parseMatchesFromHtml(html: string, map: Map<string, MarcaMatch>): void 
   const matchRows = root.querySelectorAll("li.dailyevent");
 
   for (const row of matchRows) {
-    // Only process football events
+    // Only process football events — exact match to avoid "fútbol sala" / "fútbol americano"
     const sport = row.querySelector("span.dailyday")?.text?.trim() ?? "";
-    if (!sport.toLowerCase().includes("fútbol") && !sport.toLowerCase().includes("futbol")) {
+    if (!/^f[uú]tbol$/i.test(sport)) {
       continue;
     }
 
@@ -91,7 +90,7 @@ function parseMatchesFromHtml(html: string, map: Map<string, MarcaMatch>): void 
     const entry: MarcaMatch = {};
     if (channel) entry.channel = channel;
 
-    if (Object.keys(entry).length > 0) {
+    if (entry.channel || entry.homeScore !== undefined) {
       map.set(makeMatchKey(homeTeam, awayTeam), entry);
     }
   }
@@ -142,5 +141,3 @@ export function findMarcaMatch(
   return undefined;
 }
 
-// Suppress unused warning — reserved for future live enrichment differentiation
-void MARCA_LIVE_TTL;
