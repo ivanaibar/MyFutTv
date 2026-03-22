@@ -90,9 +90,7 @@ function parseMatchesFromHtml(html: string, map: Map<string, MarcaMatch>): void 
     const entry: MarcaMatch = {};
     if (channel) entry.channel = channel;
 
-    if (entry.channel || entry.homeScore !== undefined) {
-      map.set(makeMatchKey(homeTeam, awayTeam), entry);
-    }
+    map.set(makeMatchKey(homeTeam, awayTeam), entry);
   }
 }
 
