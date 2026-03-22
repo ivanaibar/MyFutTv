@@ -96,7 +96,7 @@ export function MatchCard({ match }: MatchCardProps) {
 
       {/* Teams + score row */}
       <div className="flex justify-between px-4 py-2 items-center">
-        <div className="flex items-center gap-2 flex-1 min-w-0 overflow-hidden">
+        <div className="flex items-start gap-2 flex-1 min-w-0">
           {match.homeTeam.crest && (
             <img
               src={match.homeTeam.crest}
@@ -104,7 +104,7 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span className="font-bold text-base-content whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
+          <span className="font-bold text-base-content break-words min-w-0" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.homeTeam.shortName || match.homeTeam.name}
           </span>
         </div>
@@ -124,8 +124,8 @@ export function MatchCard({ match }: MatchCardProps) {
           )}
         </div>
 
-        <div className="flex items-center gap-2 flex-1 justify-end min-w-0 overflow-hidden">
-          <span className="font-bold text-base-content text-right whitespace-nowrap overflow-hidden text-ellipsis" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
+        <div className="flex items-start gap-2 flex-1 justify-end min-w-0">
+          <span className="font-bold text-base-content text-right break-words min-w-0" style={{ fontSize: "clamp(0.7rem, 3.5vw, 1rem)" }}>
             {match.awayTeam.shortName || match.awayTeam.name}
           </span>
           {match.awayTeam.crest && (
@@ -152,14 +152,14 @@ export function MatchCard({ match }: MatchCardProps) {
 
       {/* Channel footer */}
       {match.channel ? (
-        <div className="px-4 py-2.5 flex items-center gap-2 bg-primary border-t border-primary">
+        <div className="mt-2 px-4 py-2.5 flex items-center gap-2 bg-primary border-t border-primary">
           <svg className="w-4 h-4 text-primary-content shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
           <span className="text-sm font-bold text-primary-content">{match.channel}</span>
         </div>
       ) : (
-        <div className="px-4 py-1.5 flex items-center gap-2 bg-base-300/50 border-t border-base-300">
+        <div className="mt-2 px-4 py-1.5 flex items-center gap-2 bg-base-300/50 border-t border-base-300">
           <svg className="w-3.5 h-3.5 text-base-content/20 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
           </svg>
