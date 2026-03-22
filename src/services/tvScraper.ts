@@ -57,71 +57,31 @@ function parseMatchesFromHtml(html: string): ScrapedMatch[] {
   const root = parse(html);
   const matches: ScrapedMatch[] = [];
 
-  // Match entries are <a> tags with href starting with /directo/
   const matchLinks = root.querySelectorAll('a[href^="/directo/"]');
 
   for (const link of matchLinks) {
-    const imgs = link.querySelectorAll("img");
-    const allText = link.textContent.trim();
+    // Team names from dedicated span
+    const teamSpans = link.querySelectorAll("span.matchTeam__name");
+    const homeTeam = teamSpans[0]?.text?.trim() ?? "";
+    const awayTeam = teamSpans[1]?.text?.trim() ?? "";
 
-    // Extract team names and channels from img alt attributes
-    const teamLogos: string[] = [];
-    const channelNames: string[] = [];
-
-    for (const img of imgs) {
-      const alt = img.getAttribute("alt") || "";
-
-      if (alt.startsWith("Logo ")) {
-        // Could be a team logo or a competition logo
-        const name = alt.replace("Logo ", "");
-        // Competition logos typically have keywords like "Champions", "LaLiga", "UEFA", etc.
-        if (!isCompetitionName(name)) {
-          teamLogos.push(name);
-        }
-      } else if (alt && !alt.startsWith("Logo ")) {
-        // Channel name (not prefixed with "Logo ")
-        channelNames.push(alt);
-      }
-    }
+    // Channels from broadcast images specifically
+    const channelImgs = link.querySelectorAll("img.matchFull__broadcastImage");
+    const channels = channelImgs
+      .map((img) => (img.getAttribute("alt") ?? "").replace(/^Logo\s+/, "").trim())
+      .filter(Boolean);
 
     // Extract time (HH:MM pattern) from text
+    const allText = link.textContent.trim();
     const timeMatch = allText.match(/(\d{1,2}:\d{2})/);
     const time = timeMatch ? timeMatch[1] : "";
 
-    if (teamLogos.length >= 2) {
-      matches.push({
-        homeTeam: teamLogos[0],
-        awayTeam: teamLogos[1],
-        time,
-        channels: channelNames,
-      });
+    if (homeTeam && awayTeam) {
+      matches.push({ homeTeam, awayTeam, time, channels });
     }
   }
 
   return matches;
-}
-
-const COMPETITION_KEYWORDS = [
-  "champions",
-  "laliga",
-  "la liga",
-  "premier",
-  "bundesliga",
-  "serie a",
-  "ligue 1",
-  "uefa",
-  "europa league",
-  "conference",
-  "copa del rey",
-  "eredivisie",
-  "world cup",
-  "eurocopa",
-  "championship",
-];
-
-function isCompetitionName(name: string): boolean {
-  const lower = name.toLowerCase();
-  return COMPETITION_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
 /**
