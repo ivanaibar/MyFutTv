@@ -114,7 +114,7 @@ export function MatchCard({ match }: MatchCardProps) {
           </span>
         </div>
 
-        <div className="flex flex-col items-center mx-3 sm:mx-4 min-w-[60px] sm:min-w-[72px] shrink-0">
+        <div className="flex flex-col items-center mx-4 sm:mx-6 min-w-[60px] sm:min-w-[72px] shrink-0">
           {showScore ? (
             <span className="text-3xl font-black text-secondary tabular-nums">
               {match.score.fullTime.home ?? 0} - {match.score.fullTime.away ?? 0}
