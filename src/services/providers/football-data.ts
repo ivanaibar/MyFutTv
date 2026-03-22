@@ -3,6 +3,8 @@ import { getChannelForCompetition } from "../channels";
 import { scrapeTvChannels, findChannel } from "../tvScraper";
 import { FREE_COMPETITION_IDS } from "@/lib/constants";
 import { enrichWithApiFootballGoals } from "./api-football";
+import { getSofaScoreMatches, findSofaMatch } from "../sofaScoreScraper";
+import { getMarcaMatches, findMarcaMatch } from "../marcaScraper";
 import type {
   Match,
   Competition,
@@ -10,6 +12,8 @@ import type {
   FootballDataMatch,
 } from "@/types";
 import type { FootballProvider } from "./types";
+import type { SofaScoreMatch } from "../sofaScoreScraper";
+import type { MarcaMatch } from "../marcaScraper";
 
 const API_BASE = "https://api.football-data.org/v4";
 
@@ -31,14 +35,65 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
-function mapMatch(raw: FootballDataMatch, tvMap?: Map<string, string>): Match {
-  let channel: string | undefined;
-  if (tvMap) {
-    channel = findChannel(tvMap, raw.homeTeam.name, raw.awayTeam.name);
+function mergeChannel(
+  fichajes: string | undefined,
+  marca: MarcaMatch | undefined,
+  competitionId: number
+): string | undefined {
+  if (fichajes) return fichajes;
+  if (marca?.channel) return marca.channel;
+  return getChannelForCompetition(competitionId);
+}
+
+interface ScoreOverride {
+  home: number;
+  away: number;
+}
+
+function pickFresherScore(
+  fdMinute: number | undefined,
+  sofa: SofaScoreMatch | undefined,
+  marca: MarcaMatch | undefined
+): ScoreOverride | undefined {
+  if (!sofa) return undefined;
+  if (sofa.status !== "inprogress" && sofa.status !== "finished") return undefined;
+
+  const fdMin = fdMinute ?? 0;
+  const sofaMin = sofa.minute ?? 0;
+
+  // Use SofaScore if it has a higher minute (fresher data)
+  if (sofaMin > fdMin) {
+    // Two-source consensus: if Marca agrees with SofaScore, stronger signal
+    // Either way, prefer SofaScore when it's ahead
+    return { home: sofa.homeScore, away: sofa.awayScore };
   }
-  if (!channel) {
-    channel = getChannelForCompetition(raw.competition.id);
+
+  // If football-data.org is ahead or equal, check if Marca agrees with sofa against fd
+  if (
+    marca?.homeScore !== undefined &&
+    marca?.awayScore !== undefined &&
+    marca.homeScore === sofa.homeScore &&
+    marca.awayScore === sofa.awayScore
+  ) {
+    return { home: sofa.homeScore, away: sofa.awayScore };
   }
+
+  return undefined;
+}
+
+function mapMatch(
+  raw: FootballDataMatch,
+  tvMap?: Map<string, string>,
+  marcaMap?: Map<string, MarcaMatch>,
+  scoreOverride?: ScoreOverride
+): Match {
+  const fichajesChannel = tvMap
+    ? findChannel(tvMap, raw.homeTeam.name, raw.awayTeam.name)
+    : undefined;
+  const marcaEntry = marcaMap
+    ? findMarcaMatch(marcaMap, raw.homeTeam.name, raw.awayTeam.name)
+    : undefined;
+  const channel = mergeChannel(fichajesChannel, marcaEntry, raw.competition.id);
 
   return {
     id: raw.id,
@@ -65,7 +120,9 @@ function mapMatch(raw: FootballDataMatch, tvMap?: Map<string, string>): Match {
     utcDate: raw.utcDate,
     status: raw.status,
     score: {
-      fullTime: raw.score.fullTime,
+      fullTime: scoreOverride
+        ? { home: scoreOverride.home, away: scoreOverride.away }
+        : raw.score.fullTime,
       halfTime: raw.score.halfTime,
     },
     minute: raw.minute,
@@ -79,16 +136,28 @@ async function getMatchesByDate(date: string): Promise<Match[]> {
   const cached = cache.get<Match[]>(cacheKey);
   if (cached) return cached;
 
-  const [response, tvMap] = await Promise.all([
+  const [response, tvMap, sofaMap, marcaMap] = await Promise.all([
     apiFetch<FootballDataMatchesResponse>(`/matches?date=${date}`),
     scrapeTvChannels(date),
+    getSofaScoreMatches(date),
+    getMarcaMatches(date),
   ]);
 
   const rawFiltered = response.matches.filter((m) =>
     FREE_COMPETITION_IDS.includes(m.competition.id)
   );
 
-  let matches = rawFiltered.map((m) => mapMatch(m, tvMap));
+  let matches = rawFiltered.map((m) => {
+    const isLive = m.status === "IN_PLAY" || m.status === "PAUSED";
+    const sofa = isLive
+      ? findSofaMatch(sofaMap, m.homeTeam.name, m.awayTeam.name)
+      : undefined;
+    const marca = isLive
+      ? findMarcaMatch(marcaMap, m.homeTeam.name, m.awayTeam.name)
+      : undefined;
+    const override = pickFresherScore(m.minute ?? undefined, sofa, marca);
+    return mapMatch(m, tvMap, marcaMap, override);
+  });
   matches = await enrichWithApiFootballGoals(matches, date);
 
   const hasLive = matches.some(
@@ -152,9 +221,11 @@ async function getLiveMatches(): Promise<Match[]> {
   if (cached) return cached;
 
   const today = new Date().toISOString().split("T")[0];
-  const [response, tvMap] = await Promise.all([
+  const [response, tvMap, sofaMap, marcaMap] = await Promise.all([
     apiFetch<FootballDataMatchesResponse>(`/matches?date=${today}`),
     scrapeTvChannels(today),
+    getSofaScoreMatches(today),
+    getMarcaMatches(today),
   ]);
 
   const rawFiltered = response.matches.filter(
@@ -163,7 +234,12 @@ async function getLiveMatches(): Promise<Match[]> {
       (m.status === "IN_PLAY" || m.status === "PAUSED")
   );
 
-  let matches = rawFiltered.map((m) => mapMatch(m, tvMap));
+  let matches = rawFiltered.map((m) => {
+    const sofa = findSofaMatch(sofaMap, m.homeTeam.name, m.awayTeam.name);
+    const marca = findMarcaMatch(marcaMap, m.homeTeam.name, m.awayTeam.name);
+    const override = pickFresherScore(m.minute ?? undefined, sofa, marca);
+    return mapMatch(m, tvMap, marcaMap, override);
+  });
   matches = await enrichWithApiFootballGoals(matches, today);
 
   cache.set(cacheKey, matches, LIVE_MATCHES_TTL);
