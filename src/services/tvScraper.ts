@@ -62,8 +62,8 @@ function parseMatchesFromHtml(html: string): ScrapedMatch[] {
   for (const link of matchLinks) {
     // Team names from dedicated span
     const teamSpans = link.querySelectorAll("span.matchTeam__name");
-    const homeTeam = teamSpans[0]?.text?.trim() ?? "";
-    const awayTeam = teamSpans[1]?.text?.trim() ?? "";
+    const homeTeam = teamSpans[0]?.text.trim() ?? "";
+    const awayTeam = teamSpans[1]?.text.trim() ?? "";
 
     // Channels from broadcast images specifically
     const channelImgs = link.querySelectorAll("img.matchFull__broadcastImage");
@@ -72,7 +72,7 @@ function parseMatchesFromHtml(html: string): ScrapedMatch[] {
       .filter(Boolean);
 
     // Extract time (HH:MM pattern) from text
-    const allText = link.textContent.trim();
+    const allText = link.text.trim();
     const timeMatch = allText.match(/(\d{1,2}:\d{2})/);
     const time = timeMatch ? timeMatch[1] : "";
 
