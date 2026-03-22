@@ -52,8 +52,7 @@ interface ScoreOverride {
 
 function pickFresherScore(
   fdMinute: number | undefined,
-  sofa: SofaScoreMatch | undefined,
-  marca: MarcaMatch | undefined
+  sofa: SofaScoreMatch | undefined
 ): ScoreOverride | undefined {
   if (!sofa) return undefined;
   if (sofa.status !== "inprogress" && sofa.status !== "finished") return undefined;
@@ -61,20 +60,7 @@ function pickFresherScore(
   const fdMin = fdMinute ?? 0;
   const sofaMin = sofa.minute ?? 0;
 
-  // Use SofaScore if it has a higher minute (fresher data)
   if (sofaMin > fdMin) {
-    // Two-source consensus: if Marca agrees with SofaScore, stronger signal
-    // Either way, prefer SofaScore when it's ahead
-    return { home: sofa.homeScore, away: sofa.awayScore };
-  }
-
-  // If football-data.org is ahead or equal, check if Marca agrees with sofa against fd
-  if (
-    marca?.homeScore !== undefined &&
-    marca?.awayScore !== undefined &&
-    marca.homeScore === sofa.homeScore &&
-    marca.awayScore === sofa.awayScore
-  ) {
     return { home: sofa.homeScore, away: sofa.awayScore };
   }
 
@@ -152,10 +138,7 @@ async function getMatchesByDate(date: string): Promise<Match[]> {
     const sofa = isLive
       ? findSofaMatch(sofaMap, m.homeTeam.name, m.awayTeam.name)
       : undefined;
-    const marca = isLive
-      ? findMarcaMatch(marcaMap, m.homeTeam.name, m.awayTeam.name)
-      : undefined;
-    const override = pickFresherScore(m.minute ?? undefined, sofa, marca);
+    const override = pickFresherScore(m.minute ?? undefined, sofa);
     return mapMatch(m, tvMap, marcaMap, override);
   });
   matches = await enrichWithApiFootballGoals(matches, date);
@@ -236,8 +219,7 @@ async function getLiveMatches(): Promise<Match[]> {
 
   let matches = rawFiltered.map((m) => {
     const sofa = findSofaMatch(sofaMap, m.homeTeam.name, m.awayTeam.name);
-    const marca = findMarcaMatch(marcaMap, m.homeTeam.name, m.awayTeam.name);
-    const override = pickFresherScore(m.minute ?? undefined, sofa, marca);
+    const override = pickFresherScore(m.minute ?? undefined, sofa);
     return mapMatch(m, tvMap, marcaMap, override);
   });
   matches = await enrichWithApiFootballGoals(matches, today);

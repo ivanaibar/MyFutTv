@@ -3,8 +3,6 @@ import { cache } from "./cache";
 
 export interface MarcaMatch {
   channel?: string;
-  homeScore?: number;
-  awayScore?: number;
 }
 
 const MARCA_TTL = 2 * 60 * 60 * 1000; // 2h
