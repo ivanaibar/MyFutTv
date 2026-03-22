@@ -60,7 +60,7 @@ function pickFresherScore(
   const fdMin = fdMinute ?? 0;
   const sofaMin = sofa.minute ?? 0;
 
-  if (sofaMin > fdMin) {
+  if (sofaMin >= fdMin) {
     return { home: sofa.homeScore, away: sofa.awayScore };
   }
 

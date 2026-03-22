@@ -20,9 +20,14 @@ const MARCA_TTL = 2 * 60 * 60 * 1000; // 2h
  * Returns empty map on any failure.
  */
 export async function getMarcaMatches(
-  _date: string
+  date: string
 ): Promise<Map<string, MarcaMatch>> {
-  const cacheKey = `marca:${_date}`;
+  const today = new Date().toISOString().split("T")[0];
+  if (date !== today) {
+    return new Map();
+  }
+
+  const cacheKey = `marca:${date}`;
   const cached = cache.get<Map<string, MarcaMatch>>(cacheKey);
   if (cached) return cached;
 

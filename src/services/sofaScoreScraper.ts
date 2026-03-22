@@ -65,10 +65,16 @@ export async function getSofaScoreMatches(
 
       let minute = 0;
       if (isLive && !isHalftime && event.time?.currentPeriodStartTimestamp) {
-        const initial = event.time.initial ?? 0; // seconds into the period at kickoff
+        // Use period-aware fallback for initial seconds
+        const periodCode = event.status?.code;
+        const initialFallback =
+          periodCode === 6 ? 2700 :  // 2nd half starts at 45min
+          periodCode === 31 ? 2700 : // halftime = end of 1st half
+          0;                          // 1st half / default
+        const initialSeconds = event.time.initial ?? initialFallback;
         const elapsed = nowSeconds - event.time.currentPeriodStartTimestamp;
         const rawMinute =
-          Math.floor(elapsed / 60) + Math.floor(initial / 60);
+          Math.floor(elapsed / 60) + Math.floor(initialSeconds / 60);
         // Cap to the max period duration (max is in seconds: 2700=45min, 5400=90min)
         const maxMinute = event.time.max
           ? Math.floor(event.time.max / 60)
