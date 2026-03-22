@@ -81,7 +81,7 @@ export function MatchCard({ match }: MatchCardProps) {
   const { ref: awayNameRef } = useFittingFontSize(awayTeamName);
 
   return (
-    <div className="card bg-base-200 border border-base-300 hover:border-primary/40 hover:bg-base-300 transition-all duration-200 overflow-hidden rounded-lg flex flex-col h-[140px]">
+    <div className="card bg-base-200 border border-base-300 hover:border-primary/40 hover:bg-base-300 transition-all duration-200 overflow-hidden rounded-lg flex flex-col min-h-[140px]">
       {/* Competition row */}
       <div className="flex items-center justify-between px-4 pt-3 pb-1">
         <div className="flex items-center gap-2">
