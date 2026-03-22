@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 import { MatchCard } from "./MatchCard";
@@ -10,10 +10,16 @@ interface DayViewProps {
   matches: Match[];
   loading: boolean;
   error: string | null;
+  date: string;
 }
 
-export function DayView({ matches, loading, error }: DayViewProps) {
+export function DayView({ matches, loading, error, date }: DayViewProps) {
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const isToday = date === format(new Date(), "yyyy-MM-dd");
+
+  useEffect(() => {
+    setExpandedGroups(new Set());
+  }, [date]);
 
   const toggleGroup = (time: string) => {
     setExpandedGroups((prev) => {
@@ -90,7 +96,7 @@ export function DayView({ matches, loading, error }: DayViewProps) {
 
       {Array.from(groupedMatches.entries()).map(([time, timeMatches]) => {
         const allFinished = isAllFinished(timeMatches);
-        const isExpanded = expandedGroups.has(time);
+        const isExpanded = isToday ? expandedGroups.has(time) : !expandedGroups.has(time);
 
         return (
           <div key={time}>

@@ -85,7 +85,7 @@ export default function Home() {
 
       <div className="max-w-3xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {view === "day" && (
-          <DayView matches={matches} loading={loading} error={error} />
+          <DayView matches={matches} loading={loading} error={error} date={dateStr} />
         )}
         {view === "week" && (
           <WeekView
