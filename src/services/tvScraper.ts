@@ -56,11 +56,11 @@ export async function scrapeTvChannels(
     }
 
     console.log(JSON.stringify({ level: "info", msg: "scraper_done", scraper: "fichajes", date, total: matches.length, with_channels: found, ms: Date.now() - start }));
+    cache.set(cacheKey, channelMap, TV_SCRAPE_TTL);
   } catch (error) {
     console.error(JSON.stringify({ level: "error", msg: "scraper_failed", scraper: "fichajes", date, error: error instanceof Error ? error.message : String(error), ms: Date.now() - start }));
   }
 
-  cache.set(cacheKey, channelMap, TV_SCRAPE_TTL);
   return channelMap;
 }
 
