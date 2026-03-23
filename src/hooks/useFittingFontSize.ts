@@ -35,13 +35,16 @@ export function useFittingFontSize(text: string, opts: FitOptions = {}) {
     const lineHeight = isNaN(rawLineHeight) ? initialRem * 16 * 1.2 : rawLineHeight;
     const maxHeight = lineHeight * maxLines;
 
+    const overflows = () =>
+      el.scrollHeight > maxHeight + 1 || el.scrollWidth > el.clientWidth;
+
     let size = initialRem;
-    while (el.scrollHeight > maxHeight + 1 && size > minRem) {
+    while (overflows() && size > minRem) {
       size = Math.max(parseFloat((size - step).toFixed(3)), minRem);
       el.style.fontSize = `${size}rem`;
     }
 
-    if (el.scrollHeight > maxHeight + 1) {
+    if (overflows()) {
       // Still overflows at minimum — apply line-clamp
       el.style.display = "-webkit-box";
       el.style.webkitBoxOrient = "vertical";
