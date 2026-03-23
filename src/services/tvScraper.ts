@@ -19,9 +19,13 @@ export async function scrapeTvChannels(
 ): Promise<Map<string, string>> {
   const cacheKey = `tv:${date}`;
   const cached = cache.get<Map<string, string>>(cacheKey);
-  if (cached) return cached;
+  if (cached) {
+    console.log(JSON.stringify({ level: "info", msg: "scraper_cache_hit", date }));
+    return cached;
+  }
 
   const channelMap = new Map<string, string>();
+  const start = Date.now();
 
   try {
     const res = await fetch("https://www.fichajes.com/futbol-tele/", {
@@ -35,21 +39,25 @@ export async function scrapeTvChannels(
     });
 
     if (!res.ok) {
-      console.error(`TV scraper: HTTP ${res.status}`);
+      console.error(JSON.stringify({ level: "error", msg: "scraper_http_error", scraper: "fichajes", status: res.status, ms: Date.now() - start }));
       return channelMap;
     }
 
     const html = await res.text();
     const matches = parseMatchesFromHtml(html);
 
+    let found = 0;
     for (const match of matches) {
       if (match.channels.length > 0) {
         const key = makeMatchKey(match.homeTeam, match.awayTeam);
         channelMap.set(key, match.channels.join(" / "));
+        found++;
       }
     }
+
+    console.log(JSON.stringify({ level: "info", msg: "scraper_done", scraper: "fichajes", date, total: matches.length, with_channels: found, ms: Date.now() - start }));
   } catch (error) {
-    console.error("TV scraper error:", error);
+    console.error(JSON.stringify({ level: "error", msg: "scraper_failed", scraper: "fichajes", date, error: error instanceof Error ? error.message : String(error), ms: Date.now() - start }));
   }
 
   cache.set(cacheKey, channelMap, TV_SCRAPE_TTL);
