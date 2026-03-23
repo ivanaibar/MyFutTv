@@ -310,3 +310,8 @@ export const espnProvider: FootballProvider = {
 export const ESPN_COMPETITION_IDS = Object.values(ESPN_SLUG_CONFIG).map(
   (c) => c.id
 );
+
+// Static competition list for the league filter (emblem resolved at runtime via ESPN leagues array)
+export const ESPN_STATIC_COMPETITIONS: Competition[] = Object.values(
+  ESPN_SLUG_CONFIG
+).map((c) => ({ id: c.id, name: c.name, code: c.code, emblem: "" }));
