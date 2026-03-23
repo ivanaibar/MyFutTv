@@ -27,7 +27,10 @@ export async function scrapeTvChannels(
     const res = await fetch("https://www.fichajes.com/futbol-tele/", {
       headers: {
         "User-Agent":
-          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36",
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "es-ES,es;q=0.9",
+        Referer: "https://www.google.es/",
       },
     });
 
@@ -65,8 +68,8 @@ function parseMatchesFromHtml(html: string): ScrapedMatch[] {
     const homeTeam = teamSpans[0]?.text.trim() ?? "";
     const awayTeam = teamSpans[1]?.text.trim() ?? "";
 
-    // Channels from broadcast images specifically
-    const channelImgs = link.querySelectorAll("img.matchFull__broadcastImage");
+    // Channels from broadcast images inside the broadcasts container
+    const channelImgs = link.querySelectorAll("span.matchFull__broadcasts img");
     const channels = channelImgs
       .map((img) => (img.getAttribute("alt") ?? "").replace(/^Logo\s+/, "").trim())
       .filter(Boolean);
