@@ -113,7 +113,7 @@ export function MatchCard({ match }: MatchCardProps) {
               className="w-8 h-8 shrink-0"
             />
           )}
-          <span ref={homeNameRef} className="font-bold text-base-content">
+          <span ref={homeNameRef} className="font-bold text-base-content block overflow-hidden min-w-0">
             {homeTeamName}
           </span>
         </div>
@@ -134,7 +134,7 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
 
         <div className="flex items-center gap-2 flex-1 justify-end min-w-0">
-          <span ref={awayNameRef} className="font-bold text-base-content text-right">
+          <span ref={awayNameRef} className="font-bold text-base-content text-right block overflow-hidden min-w-0">
             {awayTeamName}
           </span>
           {match.awayTeam.crest && (
