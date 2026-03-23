@@ -1,9 +1,8 @@
 import { cache } from "../cache";
-import { getChannelForCompetition } from "../channels";
 import { scrapeTvChannels, findChannel } from "../tvScraper";
 import { FREE_COMPETITION_IDS } from "@/lib/constants";
-import { enrichWithApiFootballGoals } from "./api-football";
 import { getSofaScoreMatches, findSofaMatch } from "../sofaScoreScraper";
+import { enrichWithEspnGoals } from "../espnGoalsScraper";
 import { getMarcaMatches, findMarcaMatch } from "../marcaScraper";
 import type {
   Match,
@@ -38,11 +37,10 @@ async function apiFetch<T>(endpoint: string): Promise<T> {
 function mergeChannel(
   fichajes: string | undefined,
   marca: MarcaMatch | undefined,
-  competitionId: number
 ): string | undefined {
   if (fichajes) return fichajes;
   if (marca?.channel) return marca.channel;
-  return getChannelForCompetition(competitionId);
+  return undefined;
 }
 
 interface ScoreOverride {
@@ -79,7 +77,7 @@ function mapMatch(
   const marcaEntry = marcaMap
     ? findMarcaMatch(marcaMap, raw.homeTeam.name, raw.awayTeam.name)
     : undefined;
-  const channel = mergeChannel(fichajesChannel, marcaEntry, raw.competition.id);
+  const channel = mergeChannel(fichajesChannel, marcaEntry);
 
   return {
     id: raw.id,
@@ -141,7 +139,7 @@ async function getMatchesByDate(date: string): Promise<Match[]> {
     const override = pickFresherScore(m.minute ?? undefined, sofa);
     return mapMatch(m, tvMap, marcaMap, override);
   });
-  matches = await enrichWithApiFootballGoals(matches, date);
+  matches = await enrichWithEspnGoals(matches);
 
   const hasLive = matches.some(
     (m) => m.status === "IN_PLAY" || m.status === "PAUSED"
@@ -222,7 +220,7 @@ async function getLiveMatches(): Promise<Match[]> {
     const override = pickFresherScore(m.minute ?? undefined, sofa);
     return mapMatch(m, tvMap, marcaMap, override);
   });
-  matches = await enrichWithApiFootballGoals(matches, today);
+  matches = await enrichWithEspnGoals(matches);
 
   cache.set(cacheKey, matches, LIVE_MATCHES_TTL);
   return matches;

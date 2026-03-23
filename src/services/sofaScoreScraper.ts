@@ -1,4 +1,5 @@
 import { cache } from "./cache";
+import type { Goal, Match } from "@/types";
 
 export interface SofaScoreMatch {
   sofaId: number;
@@ -145,6 +146,105 @@ function normalize(name: string): string {
 
 function makeMatchKey(home: string, away: string): string {
   return `${normalize(home)}::${normalize(away)}`;
+}
+
+const SOFA_GOALS_TTL = 60 * 60 * 1000; // 1h — goal data doesn't change once finished
+
+interface SofaIncident {
+  incidentType?: string;
+  incidentClass?: string;
+  time?: number;
+  addedTime?: number;
+  isHome?: boolean;
+  player?: { name?: string };
+  playerName?: string; // fallback field used by some SofaScore versions
+}
+
+/**
+ * Fetches goal incidents for a single match by SofaScore event ID.
+ * Returns an array of Goal objects, or empty array on error.
+ */
+export async function getSofaScoreGoals(sofaId: number): Promise<Goal[]> {
+  const cacheKey = `sofascore:goals:${sofaId}`;
+  const cached = cache.get<Goal[]>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await fetch(
+      `https://api.sofascore.com/api/v1/event/${sofaId}/incidents`,
+      {
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          Referer: "https://www.sofascore.com/",
+          Accept: "application/json, text/plain, */*",
+        },
+      }
+    );
+
+    if (!res.ok) {
+      console.warn(`[sofascore:goals] HTTP ${res.status} for event ${sofaId}`);
+      cache.set(cacheKey, [], SOFA_GOALS_TTL);
+      return [];
+    }
+
+    const json = (await res.json()) as { incidents?: SofaIncident[] };
+    const incidents = json.incidents ?? [];
+
+    const goals: Goal[] = incidents
+      .filter((i) => i.incidentType === "goal")
+      .map((i) => {
+        const scorer = i.player?.name ?? i.playerName ?? "Desconocido";
+        const minute = i.time ?? 0;
+        const team: "home" | "away" = i.isHome ? "home" : "away";
+        const incidentClass = i.incidentClass ?? "regular";
+        const type: Goal["type"] =
+          incidentClass === "ownGoal"
+            ? "OWN_GOAL"
+            : incidentClass === "penalty"
+            ? "PENALTY"
+            : "REGULAR";
+        return { scorer, minute, team, type };
+      });
+
+    cache.set(cacheKey, goals, SOFA_GOALS_TTL);
+    return goals;
+  } catch (err) {
+    console.error(`[sofascore:goals] Error for event ${sofaId}:`, err);
+    cache.set(cacheKey, [], SOFA_GOALS_TTL);
+    return [];
+  }
+}
+
+const ENRICHABLE_STATUSES = new Set(["FINISHED", "IN_PLAY", "PAUSED"]);
+
+/**
+ * Enriches matches with goal scorer data from SofaScore incidents.
+ * Uses sofaId from the already-fetched sofaMap — no extra date fetch needed.
+ */
+export async function enrichWithSofaScoreGoals(
+  matches: Match[],
+  sofaMap: Map<string, SofaScoreMatch>
+): Promise<Match[]> {
+  const enrichable = matches.filter((m) => ENRICHABLE_STATUSES.has(m.status));
+  if (enrichable.length === 0) return matches;
+
+  const enriched = [...matches];
+
+  await Promise.allSettled(
+    enrichable.map(async (match) => {
+      const sofa = findSofaMatch(sofaMap, match.homeTeam.name, match.awayTeam.name);
+      if (!sofa) return;
+
+      const goals = await getSofaScoreGoals(sofa.sofaId);
+      if (goals.length === 0) return;
+
+      const idx = enriched.findIndex((m) => m.id === match.id);
+      if (idx !== -1) enriched[idx] = { ...enriched[idx], goals };
+    })
+  );
+
+  return enriched;
 }
 
 /**
