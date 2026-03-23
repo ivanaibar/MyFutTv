@@ -232,24 +232,48 @@ export const footballDataProvider: FootballProvider = {
   getLiveMatches,
 };
 
+// Static fallback — used when football-data.org is rate-limited or unavailable.
+// Covers all FREE_COMPETITION_IDS. Emblems are empty (gracefully handled by UI).
+const STATIC_COMPETITIONS: Competition[] = [
+  { id: 2014, name: "La Liga",                  code: "PD",  emblem: "" },
+  { id: 2001, name: "UEFA Champions League",     code: "CL",  emblem: "" },
+  { id: 2021, name: "Premier League",            code: "PL",  emblem: "" },
+  { id: 2002, name: "Bundesliga",                code: "BL1", emblem: "" },
+  { id: 2015, name: "Ligue 1",                   code: "FL1", emblem: "" },
+  { id: 2019, name: "Serie A",                   code: "SA",  emblem: "" },
+  { id: 2003, name: "Eredivisie",                code: "DED", emblem: "" },
+  { id: 2017, name: "Primeira Liga",             code: "PPL", emblem: "" },
+  { id: 2016, name: "EFL Championship",          code: "ELC", emblem: "" },
+  { id: 2013, name: "Brasileirão Série A",       code: "BSA", emblem: "" },
+  { id: 2000, name: "FIFA World Cup",            code: "WC",  emblem: "" },
+  { id: 2018, name: "European Championship",     code: "EC",  emblem: "" },
+];
+
 export async function getCompetitions(): Promise<Competition[]> {
   const cacheKey = "competitions";
   const cached = cache.get<Competition[]>(cacheKey);
   if (cached) return cached;
 
-  const response = await apiFetch<{
-    competitions: Array<Competition & { id: number }>;
-  }>("/competitions");
+  try {
+    const response = await apiFetch<{
+      competitions: Array<Competition & { id: number }>;
+    }>("/competitions");
 
-  const competitions = response.competitions
-    .filter((c) => FREE_COMPETITION_IDS.includes(c.id))
-    .map((c) => ({
-      id: c.id,
-      name: c.name,
-      code: c.code,
-      emblem: c.emblem,
-    }));
+    const competitions = response.competitions
+      .filter((c) => FREE_COMPETITION_IDS.includes(c.id))
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        code: c.code,
+        emblem: c.emblem,
+      }));
 
-  cache.set(cacheKey, competitions, COMPETITIONS_TTL);
-  return competitions;
+    cache.set(cacheKey, competitions, COMPETITIONS_TTL);
+    return competitions;
+  } catch (err) {
+    // Rate-limited or unreachable — serve static fallback and retry in 5 minutes
+    console.warn(JSON.stringify({ level: "warn", msg: "competitions_fallback", error: err instanceof Error ? err.message : String(err) }));
+    cache.set(cacheKey, STATIC_COMPETITIONS, 5 * 60 * 1000);
+    return STATIC_COMPETITIONS;
+  }
 }
