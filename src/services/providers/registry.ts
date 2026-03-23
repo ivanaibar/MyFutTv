@@ -2,8 +2,9 @@ import type { FootballProvider } from "./types";
 import type { Match } from "@/types";
 import { footballDataProvider, getCompetitions } from "./football-data";
 import { apiFootballProvider } from "./api-football";
+import { espnProvider } from "./espnProvider";
 
-export type ProviderName = "football-data" | "api-football";
+export type ProviderName = "football-data" | "api-football" | "espn";
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 // To route a competition to a different provider, add its ID here.
@@ -21,6 +22,7 @@ const DEFAULT_PROVIDER: ProviderName = "football-data";
 const PROVIDERS: Record<ProviderName, FootballProvider> = {
   "football-data": footballDataProvider,
   "api-football": apiFootballProvider,
+  "espn": espnProvider,
 };
 
 export function getProvider(competitionId?: number): FootballProvider {
@@ -48,7 +50,7 @@ async function mergeProviders(calls: Promise<Match[]>[]): Promise<Match[]> {
 }
 
 function activeProviders(): FootballProvider[] {
-  const names = new Set<ProviderName>([DEFAULT_PROVIDER]);
+  const names = new Set<ProviderName>([DEFAULT_PROVIDER, "espn"]);
   for (const name of Object.values(COMPETITION_PROVIDERS)) {
     if (name) names.add(name);
   }

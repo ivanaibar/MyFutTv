@@ -80,6 +80,10 @@ export function MatchCard({ match }: MatchCardProps) {
   const { ref: homeNameRef } = useFittingFontSize(homeTeamName);
   const { ref: awayNameRef } = useFittingFontSize(awayTeamName);
 
+  const today = format(new Date(), "yyyy-MM-dd");
+  const matchDay = match.utcDate.slice(0, 10);
+  const showChannel = matchDay >= today;
+
   return (
     <div className="card bg-base-200 border border-base-300 hover:border-primary/40 hover:bg-base-300 transition-all duration-200 overflow-hidden rounded-lg flex flex-col min-h-[140px]">
       {/* Competition row */}
@@ -155,8 +159,8 @@ export function MatchCard({ match }: MatchCardProps) {
         </div>
       )}
 
-      {/* Channel footer */}
-      {match.channel ? (
+      {/* Channel footer — only for today and future matches */}
+      {showChannel && (match.channel ? (
         <div className="mt-2 px-4 py-2.5 flex items-center gap-2 bg-primary border-t border-primary">
           <svg className="w-4 h-4 text-primary-content shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -170,7 +174,7 @@ export function MatchCard({ match }: MatchCardProps) {
           </svg>
           <span className="text-xs text-base-content/30">Canal no disponible</span>
         </div>
-      )}
+      ))}
     </div>
   );
 }
